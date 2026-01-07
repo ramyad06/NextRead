@@ -22,6 +22,34 @@ xgb_ranker = None
 pop_rec = None
 url_to_idx = {}
 
+# Allowed Substack Domains (including custom domains known to be Substack)
+ALLOWED_SUBSTACK_DOMAINS = [
+    "substack.com",
+    "lennysnewsletter.com",
+    "pragmaticengineer.com",
+    "bytebytego.com",
+    "systemdesign.one",
+    "refactoring.fm",
+    "platformer.news",
+    "generalist.com",
+    "netinterest.co",
+    "noahpinion.blog",
+    "thefp.com",
+    "persuasion.community"
+]
+
+def filter_substack_only(recommendations):
+    """
+    Filters a list of recommendations (dicts with 'url') to only include
+    those from allowed Substack domains.
+    """
+    filtered = []
+    for rec in recommendations:
+        url = rec.get('url', '').lower()
+        if any(domain in url for domain in ALLOWED_SUBSTACK_DOMAINS):
+            filtered.append(rec)
+    return filtered
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Load Data and Train Models on Startup
@@ -56,6 +84,17 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# Enable CORS for local development
+from fastapi.middleware.cors import CORSMiddleware
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for development
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
@@ -68,7 +107,7 @@ def recommend(user_id: int, top_k: int = 5):
         # In a real system we might track anonymous users differently
         print(f"New user {user_id}, using Popularity Fallback")
         recs = pop_rec.recommend(top_k=top_k)
-        return {"user_id": user_id, "strategy": "popularity", "recommendations": recs}
+        return {"user_id": user_id, "strategy": "popularity", "recommendations": filter_substack_only(recs)}
         
     # Get User History
     user_interactions = interactions_df[interactions_df['user_id'] == user_id]
@@ -77,13 +116,13 @@ def recommend(user_id: int, top_k: int = 5):
          # Cold Start Fallback
          print(f"User {user_id} has little history, using Popularity Fallback")
          recs = pop_rec.recommend(top_k=top_k)
-         return {"user_id": user_id, "strategy": "popularity", "recommendations": recs}
+         return {"user_id": user_id, "strategy": "popularity", "recommendations": filter_substack_only(recs)}
 
     history_indices = [url_to_idx.get(u) for u in user_interactions['article_url'] if u in url_to_idx]
     
     if not history_indices:
         recs = pop_rec.recommend(top_k=top_k)
-        return {"user_id": user_id, "strategy": "popularity", "recommendations": recs}
+        return {"user_id": user_id, "strategy": "popularity", "recommendations": filter_substack_only(recs)}
 
     # Candidate Gen
     user_profile = tfidf_rec.get_user_profile(history_indices)
@@ -91,7 +130,7 @@ def recommend(user_id: int, top_k: int = 5):
     
     if not candidates:
         recs = pop_rec.recommend(top_k=top_k)
-        return {"user_id": user_id, "strategy": "popularity", "recommendations": recs}
+        return {"user_id": user_id, "strategy": "popularity", "recommendations": filter_substack_only(recs)}
         
     # Feature Prep for Ranking
     user_stats = user_interactions.agg({
@@ -109,7 +148,7 @@ def recommend(user_id: int, top_k: int = 5):
     
     if cand_df.empty:
         recs = pop_rec.recommend(top_k=top_k)
-        return {"user_id": user_id, "strategy": "popularity", "recommendations": recs}
+        return {"user_id": user_id, "strategy": "popularity", "recommendations": filter_substack_only(recs)}
         
     # Predict
     # Rename feature if needed (fixed in main.py already)
@@ -130,7 +169,7 @@ def recommend(user_id: int, top_k: int = 5):
             "score": float(row['rerank_score'])
         })
         
-    return {"user_id": user_id, "strategy": "hybrid", "recommendations": response}
+    return {"user_id": user_id, "strategy": "hybrid", "recommendations": filter_substack_only(response)}
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

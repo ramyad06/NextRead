@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NextRead | Smart Article Recommendations</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <span class="icon">📚</span>
+                <h1>NextRead</h1>
+            </div>
+            <p class="tagline">Curated just for you. Powered by Hybrid AI.</p>
+        </header>
+
+        <main>
+            <div class="search-section">
+                <div class="input-wrapper">
+                    <input type="number" id="user-id-input" placeholder="Enter your User ID (e.g. 0)" min="0">
+                    <button id="get-recs-btn" class="primary-btn">
+                        <span>Get Recommendations</span>
+                        <div class="spinner hidden"></div>
+                    </button>
+                </div>
+                <button id="surprise-me-btn" class="secondary-btn">New User? Surprise Me! ✨</button>
+            </div>
+
+            <div id="results-container" class="results-container hidden">
+                <div class="results-header">
+                    <h2>Top Picks For You</h2>
+                    <span id="strategy-badge" class="badge">Hybrid Model</span>
+                </div>
+                <div id="cards-wrapper" class="cards-wrapper">
+                    <!-- Cards will be injected here -->
+                </div>
+            </div>
+
+            <div id="error-message" class="error-message hidden">
+                <p>Something went wrong. Please try again.</p>
+            </div>
+        </main>
+
+        <footer>
+            <p>Built with FastAPI, XGBoost & ❤️</p>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>

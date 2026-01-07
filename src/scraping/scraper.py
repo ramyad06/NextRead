@@ -149,11 +149,23 @@ class SubstackScraper:
 
 if __name__ == "__main__":
     targets = [
+        # Tech
         "https://www.lennysnewsletter.com",
         "https://newsletter.pragmaticengineer.com",
         "https://blog.bytebytego.com",
         "https://newsletter.systemdesign.one",
-        "https://www.refactoring.fm"
+        "https://www.platformer.news",
+        # Business & Finance
+        "https://www.generalist.com",
+        "https://www.netinterest.co",
+        "https://noahpinion.substack.com",
+        # Culture & Politics
+        "https://www.thefp.com",
+        "https://astralcodexten.substack.com",
+        "https://www.persuasion.community",
+        # General / Lifestyle
+        "https://culturestudy.substack.com",
+        "https://maybebaby.substack.com"
     ]
     
     scraper = SubstackScraper()
